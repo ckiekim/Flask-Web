@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bootstrap4 Tutorial</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <title>Web for Machine Learning</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}">
+    <script src="{{url_for('static', filename='js/jquery.min.js')}}"></script>
+    <script src="{{url_for('static', filename='js/popper.min.js')}}"></script>
+    <script src="{{url_for('static', filename='js/bootstrap.min.js')}}"></script>
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script> -->
 </head>
 <body>
     <div class="container">
@@ -17,7 +21,11 @@
                  class="d-inline-block align-top" alt="">
             <ul class="nav nav-pills mr-auto">
                 <li class="nav-item">
-                    <a class="nav-link" style="padding-right:50px;" href="#">Home</a>
+                    <a class="nav-link" style="padding-right:50px;" href="#">
+                        <!-- <img src="{{url_for('static', filename='images/icons8-home-26.png')}}" 
+                             style="height:26px;" alt=""> --> 
+                        Home
+                    </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true"></a>
@@ -36,6 +44,16 @@
                     <li class="nav-item"><a class="nav-link" href="#">감성분석</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">분류</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">군집화</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            멤버
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="#">김민우</a>
+                            <a class="dropdown-item" href="#">김태균</a>
+                            <a class="dropdown-item" href="#">서폴드</a>
+                        </div>
+                    </li>
                 </ul>
             </div>
             <div class="col-10">
