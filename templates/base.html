@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web for Machine Learning</title>
     <link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='css/mystyle.css')}}">
     <script src="{{url_for('static', filename='js/jquery.min.js')}}"></script>
     <script src="{{url_for('static', filename='js/popper.min.js')}}"></script>
     <script src="{{url_for('static', filename='js/bootstrap.min.js')}}"></script>
@@ -21,9 +22,9 @@
                  class="d-inline-block align-top" alt="">
             <ul class="nav nav-pills mr-auto">
                 <li class="nav-item">
-                    <a class="nav-link" style="padding-right:50px;" href="#">
+                    <a class="nav-link active" href="/">
                         <!-- <img src="{{url_for('static', filename='images/icons8-home-26.png')}}" 
-                             style="height:26px;" alt=""> --> 
+                             style="height:16px;" alt=""> --> 
                         Home
                     </a>
                 </li>
@@ -40,8 +41,8 @@
         <div class="row" style="margin-top: 20px">
             <div class="col-2">
                 <ul class="nav nav-pills flex-column">
-                    <li class="nav-item"><a class="nav-link active" href="#">회귀</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">감성분석</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/list">회귀</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/jumbotron">감성분석</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">분류</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">군집화</a></li>
                     <li class="nav-item dropdown">
@@ -57,7 +58,7 @@
                 </ul>
             </div>
             <div class="col-10">
-                <h3>화면 제목</h3>
+                <h3>{% block sub_title %}{% endblock %}</h3>
                 <hr>
                 {% block main %}
                 {% endblock %}

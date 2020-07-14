@@ -12,7 +12,7 @@ def container():
 
 @app.route('/list')
 def list():
-    return render_template('list.html')
+    return render_template('list.html', sub_title='리스트')
 
 @app.route('/navbar')
 def navbar():
