@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web for Machine Learning</title>
+    <title>Web for AI App</title>
     <link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}">
-    <link rel="stylesheet" href="{{url_for('static', filename='css/mystyle.css')}}">
+    <!-- <link rel="stylesheet" href="{{url_for('static', filename='css/mystyle.css')}}"> -->
     <script src="{{url_for('static', filename='js/jquery.min.js')}}"></script>
     <script src="{{url_for('static', filename='js/popper.min.js')}}"></script>
     <script src="{{url_for('static', filename='js/bootstrap.min.js')}}"></script>
@@ -17,12 +17,12 @@
 <body>
     <div class="container">
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <img src="{{url_for('static', filename='images/ai_logo.png')}}" 
+            <img src="{{url_for('static', filename='images/ai_logo1.png')}}" 
                  style="height:60px; padding-right:50px;"
                  class="d-inline-block align-top" alt="">
             <ul class="nav nav-pills mr-auto">
                 <li class="nav-item">
-                    <a class="nav-link active" href="/">
+                    <a class="nav-link {% if menu.home %}active{% endif %}" href="/">
                         <!-- <img src="{{url_for('static', filename='images/icons8-home-26.png')}}" 
                              style="height:16px;" alt=""> --> 
                         Home
@@ -33,7 +33,7 @@
                 </li>
             </ul>
             <div class="navbar-text">
-                고객님 안녕하세요?
+                {{today}}
             </div>
         </nav>
     </div>
@@ -41,9 +41,12 @@
         <div class="row" style="margin-top: 20px">
             <div class="col-2">
                 <ul class="nav nav-pills flex-column">
-                    <li class="nav-item"><a class="nav-link active" href="/list">회귀</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/jumbotron">감성분석</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">분류</a></li>
+                    <li class="nav-item"><a class="nav-link {% if menu.regression %}active{% endif %}" 
+                        href="{% if menu.regression %}#{% else %}/regression{% endif %}">회귀</a></li>
+                    <li class="nav-item"><a class="nav-link {% if menu.jumbo %}active{% endif %}" 
+                        href="/jumbotron">감성분석</a></li>
+                    <li class="nav-item"><a class="nav-link {% if menu.classification %}active{% endif %}" 
+                        href="{% if menu.classification %}#{% else %}/classification{% endif %}">분류</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">군집화</a></li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -58,7 +61,7 @@
                 </ul>
             </div>
             <div class="col-10">
-                <h3>{% block sub_title %}{% endblock %}</h3>
+                <h3>{% block sub_title %}서브 타이틀{% endblock %}</h3>
                 <hr>
                 {% block main %}
                 {% endblock %}
