@@ -3,13 +3,13 @@ from werkzeug.utils import secure_filename
 import datetime
 import os
 import cv2
-from tensorflow import keras
-from keras.applications.resnet50 import ResNet50, decode_predictions
+#from tensorflow import keras
+#from keras.applications.resnet50 import ResNet50, decode_predictions
 
 app = Flask(__name__)
 #app.config["IMAGE_UPLOADS"] = os.path.join(app.root_path, 'static/images/uploads')
 
-resnet = ResNet50()
+#resnet = ResNet50()
 now = datetime.datetime.now()
 dow = ['월', '화', '수', '목', '금', '토', '일']
 today = ''
@@ -30,12 +30,12 @@ def dated_url_for(endpoint, **values):
 def index():
     global today
     today = now.strftime('%Y-%m-%d') + ' (' + dow[now.weekday()] + ')'
-    menu = {'home':True, 'regression':False, 'jumbo':False, 'classification':False}
+    menu = {'home':True, 'regression':False, 'senti':False, 'classification':False}
     return render_template('home.html', menu=menu, today=today)
 
 @app.route('/regression', methods=['GET', 'POST'])
 def regression():
-    menu = {'home':False, 'regression':True, 'jumbo':False, 'classification':False}
+    menu = {'home':False, 'regression':True, 'senti':False, 'classification':False}
     if request.method == 'GET':
         return render_template('regression.html', menu=menu, today=today)
     else:
@@ -50,9 +50,23 @@ def regression():
         iris = {'slen':slen, 'swid':swid, 'plen':plen, 'pwid':pwid, 'species':species}
         return render_template('reg_result.html', menu=menu, today=today, iris=iris)
 
+@app.route('/senti', methods=['GET', 'POST'])
+def senti():
+    menu = {'home':False, 'regression':False, 'senti':True, 'classification':False}
+    if request.method == 'GET':
+        return render_template('senti.html', menu=menu, today=today)
+    else:
+        review = request.form['review']
+        lr_result = 1
+        nb_result = 0
+        lr = '긍정' if lr_result else '부정'
+        nb = '긍정' if nb_result else '부정'
+        movie = {'review':review, 'lr':lr, 'nb':nb}
+        return render_template('senti_result.html', menu=menu, today=today, movie=movie)
+
 @app.route('/classification', methods=['GET', 'POST'])
 def classification():
-    menu = {'home':False, 'regression':False, 'jumbo':False, 'classification':True}
+    menu = {'home':False, 'regression':False, 'senti':False, 'classification':True}
     if request.method == 'GET':
         return render_template('classification.html', menu=menu, today=today)
     else:
@@ -62,15 +76,11 @@ def classification():
 
         img = cv2.imread(filename, -1)
         img = cv2.resize(img, (224, 224))
-        yhat = resnet.predict(img.reshape(-1, 224, 224, 3))
-        label = decode_predictions(yhat)
+        #yhat = resnet.predict(img.reshape(-1, 224, 224, 3))
+        #label = decode_predictions(yhat)
+        #label = label[0][0][1]
         return render_template('cla_result.html', menu=menu, today=today, 
-                                filename=secure_filename(f.filename), label=label[0][0][1])
-
-@app.route('/jumbotron')
-def jumbotron():
-    menu = {'home':False, 'regression':False, 'jumbo':True, 'classification':False}
-    return render_template('jumbotron.html', menu=menu, today=today)
+                                filename=secure_filename(f.filename), label='indigo_bunting')
 
 @app.route('/bottom')
 def bottom():
