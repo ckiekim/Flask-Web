@@ -9,7 +9,11 @@
                     <tr>
                         <td>이미지</td>
                         <td>
-							<input type="file" id="image" name="image">						 
+                            <div class="custom-file mb-3">
+                                <input type="file" class="custom-file-input" id="image" name="image">
+                                <label class="custom-file-label" for="image">업로드할 파일 선택</label>
+                            </div>
+							<!-- <input type="file" id="image" name="image">						  -->
 						</td>
                     </tr>
                     <tr>
@@ -23,4 +27,13 @@
         </div>
         <div class="col-2"></div>
     </div>
+{% endblock %}
+{% block addition %}
+    <script>
+        // Add the following code if you want the name of the file appear on select
+        $(".custom-file-input").on("change", function() {
+            var fileName = $(this).val().split("\\").pop();
+            $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+        });
+    </script>
 {% endblock %}
