@@ -38,14 +38,15 @@
                 <ul class="nav nav-pills flex-column">
                     <li class="nav-item"><a class="nav-link {% if menu.regression %}active{% endif %}" 
                         href="{% if menu.regression %}#{% else %}/regression{% endif %}">회귀</a></li>
-                    <li class="nav-item"><a class="nav-link {% if menu.jumbo %}active{% endif %}" 
-                        href="/jumbotron">감성분석</a></li>
+                    <li class="nav-item"><a class="nav-link {% if menu.senti %}active{% endif %}" 
+                        href="{% if menu.senti %}#{% else %}/senti{% endif %}">감성분석</a></li>
                     <li class="nav-item"><a class="nav-link {% if menu.classification %}active{% endif %}" 
                         href="{% if menu.classification %}#{% else %}/classification{% endif %}">분류</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">군집화</a></li>
+                    <li class="nav-item"><a class="nav-link {% if menu.clustering %}active{% endif %}" 
+                        href="{% if menu.clustering %}#{% else %}/clustering{% endif %}">군집화</a></li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            멤버
+                            팀 멤버
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <a class="dropdown-item" href="#">김민우</a>

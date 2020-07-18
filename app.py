@@ -1,41 +1,117 @@
 from flask import Flask, request, render_template
 from werkzeug.utils import secure_filename
 import datetime
+import joblib
+from konlpy.tag import Okt
+import re
 import os
 import cv2
-#from tensorflow import keras
+#import keras
 #from keras.applications.resnet50 import ResNet50, decode_predictions
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
 
 app = Flask(__name__)
 #app.config["IMAGE_UPLOADS"] = os.path.join(app.root_path, 'static/images/uploads')
 
-#resnet = ResNet50()
 now = datetime.datetime.now()
 dow = ['월', '화', '수', '목', '금', '토', '일']
 today = ''
+stopwords=['의','가','이','은','들','는','좀','잘','걍','과','도','를','으로','자','에','와','한','하다']
+okt = Okt()
+tfidf_vector = None
+model_lr = None
+dtmvector = None
+model_nb = None
+resnet = None
 
-''' @app.context_processor
-def override_url_for():
-    return dict(url_for=dated_url_for)
+def load_lr():
+    global tfidf_vector, model_lr
+    tfidf_vector = joblib.load('model/movie_lr_dtm.pkl')
+    model_lr = joblib.load('model/movie_lr.pkl')
 
-def dated_url_for(endpoint, **values):
-    if endpoint == 'static':
-        filename = values.get('filename', None)
-        if filename:
-            file_path = os.path.join(app.root_path, endpoint, filename)
-            values['q'] = int(os.stat(file_path).st_mtime)
-    return url_for(endpoint, **values) '''
+def tw_tokenizer(text):
+    # 입력 인자로 들어온 text 를 형태소 단어로 토큰화 하여 list 객체 반환
+    tokens_ko = okt.morphs(text)
+    return tokens_ko
+
+def lr_transform(review):
+    review = re.sub(r"\d+", " ", review)
+    test_dtm = tfidf_vector.transform([review])
+    return test_dtm
+
+def load_nb():
+    global dtmvector, model_nb
+    dtmvector = joblib.load('model/movie_nb_dtm.pkl')
+    model_nb = joblib.load('model/movie_nb.pkl')
+
+def nb_transform(review):
+    review = review.replace("[^ㄱ-ㅎㅏ-ㅣ가-힣 ]","")
+    morphs = okt.morphs(review, stem=True) # 토큰화
+    test = ' '.join(morph for morph in morphs if not morph in stopwords)
+    test_dtm = dtmvector.transform([test])
+    return test_dtm
+
+def load_resnet():
+    global resnet
+    resnet = ResNet50()
+
+def clustering_iris(ncls):
+    iris_df = pd.read_csv('data/iris.csv')
+    del iris_df['Id']
+    target = LabelEncoder().fit_transform(iris_df['Species'])
+    del iris_df['Species']
+    iris_data = iris_df.values
+
+    kmeans = KMeans(n_clusters=ncls, init='k-means++', max_iter=300,
+                    random_state=0)
+    kmeans.fit(iris_data)
+    iris_df['target'] = target
+    iris_df['cluster'] = kmeans.labels_
+
+    pca = PCA(n_components=2)
+    pca_transformed = pca.fit_transform(iris_data)
+    iris_df['pca_x'] = pca_transformed[:,0]
+    iris_df['pca_y'] = pca_transformed[:,1]
+
+    markers=['^', 's', 'o', '*', 'P', 'p']
+    iris_target_name = ['Setosa', 'Versicolor', 'Virginica']
+
+    # K-Means Clustering 산점도
+    fig, ax = plt.subplots(figsize=(6,4))
+    for i in range(ncls):
+        x_axis_data = iris_df[iris_df['cluster']==i]['pca_x']
+        y_axis_data = iris_df[iris_df['cluster']==i]['pca_y']
+        ax.scatter(x_axis_data, y_axis_data, marker=markers[i])
+    ax.set_xlabel('PCA 1')
+    ax.set_ylabel('PCA 2')
+    fig.savefig('static/images/kmc.png')
+
+    # PCA 산점도
+    fig, ax = plt.subplots(figsize=(6,4))
+    for i in range(3):
+        x_axis_data = iris_df[iris_df['target']==i]['pca_x']
+        y_axis_data = iris_df[iris_df['target']==i]['pca_y']
+        ax.scatter(x_axis_data, y_axis_data, marker=markers[i],
+                    label=iris_target_name[i])
+    ax.legend()
+    ax.set_xlabel('PCA 1')
+    ax.set_ylabel('PCA 2')
+    fig.savefig('static/images/pca.png')
 
 @app.route('/')
 def index():
     global today
     today = now.strftime('%Y-%m-%d') + ' (' + dow[now.weekday()] + ')'
-    menu = {'home':True, 'regression':False, 'senti':False, 'classification':False}
+    menu = {'home':True, 'regression':False, 'senti':False, 'classification':False, 'clustering':False}
     return render_template('home.html', menu=menu, today=today)
 
 @app.route('/regression', methods=['GET', 'POST'])
 def regression():
-    menu = {'home':False, 'regression':True, 'senti':False, 'classification':False}
+    menu = {'home':False, 'regression':True, 'senti':False, 'classification':False, 'clustering':False}
     if request.method == 'GET':
         return render_template('regression.html', menu=menu, today=today)
     else:
@@ -52,13 +128,15 @@ def regression():
 
 @app.route('/senti', methods=['GET', 'POST'])
 def senti():
-    menu = {'home':False, 'regression':False, 'senti':True, 'classification':False}
+    menu = {'home':False, 'regression':False, 'senti':True, 'classification':False, 'clustering':False}
     if request.method == 'GET':
         return render_template('senti.html', menu=menu, today=today)
     else:
         review = request.form['review']
-        lr_result = 1
-        nb_result = 0
+        review_dtm_lr = lr_transform(review)
+        lr_result = model_lr.predict(review_dtm_lr)[0]
+        review_dtm_nb = nb_transform(review)
+        nb_result = model_nb.predict(review_dtm_nb)[0]
         lr = '긍정' if lr_result else '부정'
         nb = '긍정' if nb_result else '부정'
         movie = {'review':review, 'lr':lr, 'nb':nb}
@@ -66,7 +144,7 @@ def senti():
 
 @app.route('/classification', methods=['GET', 'POST'])
 def classification():
-    menu = {'home':False, 'regression':False, 'senti':False, 'classification':True}
+    menu = {'home':False, 'regression':False, 'senti':False, 'classification':True, 'clustering':False}
     if request.method == 'GET':
         return render_template('classification.html', menu=menu, today=today)
     else:
@@ -79,16 +157,31 @@ def classification():
         #yhat = resnet.predict(img.reshape(-1, 224, 224, 3))
         #label = decode_predictions(yhat)
         #label = label[0][0][1]
-        return render_template('cla_result.html', menu=menu, today=today, 
+        return render_template('cla_result.html', menu=menu, today=today,
                                 filename=secure_filename(f.filename), label='indigo_bunting')
 
-@app.route('/bottom')
-def bottom():
-    return render_template('bottom.html')
+@app.route('/clustering', methods=['GET', 'POST'])
+def clustering():
+    menu = {'home':False, 'regression':False, 'senti':False, 'classification':False, 'clustering':True}
+    if request.method == 'GET':
+        return render_template('clustering.html', menu=menu, today=today)
+    else:
+        #f = request.files['csv']
+        #filename = os.path.join(app.root_path, 'static/images/uploads/') + secure_filename(f.filename)
+        #f.save(filename)
+        ncls = int(request.form['K'])
+        clustering_iris(ncls)
+        file_path = os.path.join(app.root_path, 'static/images/kmc.png')
+        mtime = int(os.stat(file_path).st_mtime)
+        return render_template('clu_result.html', menu=menu, today=today, 
+                                K=ncls, mtime=mtime)
 
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template('page_not_found.html'), 404
 
 if __name__ == '__main__':
+    load_lr()
+    load_nb()
+    #load_resnet()
     app.run(debug=True)
