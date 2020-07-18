@@ -27,22 +27,24 @@ iris_df['pca_y'] = pca_transformed[:,1]
 markers=['^', 's', 'o', '*', 'P', 'p']
 iris_target_name = ['Setosa', 'Versicolor', 'Virginica']
 
-# K-Means Clustering 산점도
-for i in range(ncls):
-    x_axis_data = iris_df[iris_df['cluster']==i]['pca_x']
-    y_axis_data = iris_df[iris_df['cluster']==i]['pca_y']
-    plt.scatter(x_axis_data, y_axis_data, marker=markers[i])
-plt.xlabel('PCA 1')
-plt.ylabel('PCA 2')
-plt.savefig('static/images/kmc.png')
-
-# PCA 산점도 
+# PCA 산점도
+fig, ax = plt.subplots(figsize=(6,4))
 for i in range(3):
     x_axis_data = iris_df[iris_df['target']==i]['pca_x']
     y_axis_data = iris_df[iris_df['target']==i]['pca_y']
-    plt.scatter(x_axis_data, y_axis_data, marker=markers[i],
+    ax.scatter(x_axis_data, y_axis_data, marker=markers[i],
                 label=iris_target_name[i])
-plt.legend()
-plt.xlabel('PCA 1')
-plt.ylabel('PCA 2')
-plt.savefig('static/images/pca.png')
+ax.legend()
+ax.set_xlabel('PCA 1')
+ax.set_ylabel('PCA 2')
+fig.savefig('static/images/pca.png')
+
+# K-Means Clustering 산점도
+fig, ax = plt.subplots(figsize=(6,4))
+for i in range(ncls):
+    x_axis_data = iris_df[iris_df['cluster']==i]['pca_x']
+    y_axis_data = iris_df[iris_df['cluster']==i]['pca_y']
+    ax.scatter(x_axis_data, y_axis_data, marker=markers[i])
+ax.set_xlabel('PCA 1')
+ax.set_ylabel('PCA 2')
+fig.savefig('static/images/kmc.png')

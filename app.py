@@ -5,9 +5,10 @@ import joblib
 from konlpy.tag import Okt
 import re
 import os
-import cv2
-#import keras
-#from keras.applications.resnet50 import ResNet50, decode_predictions
+from tensorflow import keras
+from keras.applications.vgg16 import VGG16, decode_predictions
+import numpy as np
+from PIL import Image
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelEncoder
@@ -15,7 +16,6 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 
 app = Flask(__name__)
-#app.config["IMAGE_UPLOADS"] = os.path.join(app.root_path, 'static/images/uploads')
 
 now = datetime.datetime.now()
 dow = ['월', '화', '수', '목', '금', '토', '일']
@@ -26,7 +26,7 @@ tfidf_vector = None
 model_lr = None
 dtmvector = None
 model_nb = None
-resnet = None
+vgg = None
 
 def load_lr():
     global tfidf_vector, model_lr
@@ -55,12 +55,12 @@ def nb_transform(review):
     test_dtm = dtmvector.transform([test])
     return test_dtm
 
-def load_resnet():
-    global resnet
-    resnet = ResNet50()
+def load_vgg():
+    global vgg
+    vgg = VGG16()
 
-def clustering_iris(ncls):
-    iris_df = pd.read_csv('data/iris.csv')
+def clustering_iris(ncls, filename='data/iris.csv'):
+    iris_df = pd.read_csv(filename)
     del iris_df['Id']
     target = LabelEncoder().fit_transform(iris_df['Species'])
     del iris_df['Species']
@@ -80,16 +80,6 @@ def clustering_iris(ncls):
     markers=['^', 's', 'o', '*', 'P', 'p']
     iris_target_name = ['Setosa', 'Versicolor', 'Virginica']
 
-    # K-Means Clustering 산점도
-    fig, ax = plt.subplots(figsize=(6,4))
-    for i in range(ncls):
-        x_axis_data = iris_df[iris_df['cluster']==i]['pca_x']
-        y_axis_data = iris_df[iris_df['cluster']==i]['pca_y']
-        ax.scatter(x_axis_data, y_axis_data, marker=markers[i])
-    ax.set_xlabel('PCA 1')
-    ax.set_ylabel('PCA 2')
-    fig.savefig('static/images/kmc.png')
-
     # PCA 산점도
     fig, ax = plt.subplots(figsize=(6,4))
     for i in range(3):
@@ -101,6 +91,16 @@ def clustering_iris(ncls):
     ax.set_xlabel('PCA 1')
     ax.set_ylabel('PCA 2')
     fig.savefig('static/images/pca.png')
+
+    # K-Means Clustering 산점도
+    fig, ax = plt.subplots(figsize=(6,4))
+    for i in range(ncls):
+        x_axis_data = iris_df[iris_df['cluster']==i]['pca_x']
+        y_axis_data = iris_df[iris_df['cluster']==i]['pca_y']
+        ax.scatter(x_axis_data, y_axis_data, marker=markers[i])
+    ax.set_xlabel('PCA 1')
+    ax.set_ylabel('PCA 2')
+    fig.savefig('static/images/kmc.png')
 
 @app.route('/')
 def index():
@@ -151,14 +151,14 @@ def classification():
         f = request.files['image']
         filename = os.path.join(app.root_path, 'static/images/uploads/') + secure_filename(f.filename)
         f.save(filename)
-
-        img = cv2.imread(filename, -1)
-        img = cv2.resize(img, (224, 224))
-        #yhat = resnet.predict(img.reshape(-1, 224, 224, 3))
-        #label = decode_predictions(yhat)
-        #label = label[0][0][1]
+        img = np.array(Image.open(filename).resize((224, 224)))
+        yhat = vgg.predict(img.reshape(-1, 224, 224, 3))
+        label_key = np.argmax(yhat)
+        label = decode_predictions(yhat)
+        label = label[0][0]
         return render_template('cla_result.html', menu=menu, today=today,
-                                filename=secure_filename(f.filename), label='indigo_bunting')
+                                filename=secure_filename(f.filename), 
+                                label=label[1], pct='%.2f' % (label[2]*100))
 
 @app.route('/clustering', methods=['GET', 'POST'])
 def clustering():
@@ -183,5 +183,5 @@ def page_not_found(error):
 if __name__ == '__main__':
     load_lr()
     load_nb()
-    #load_resnet()
+    load_vgg()
     app.run(debug=True)
