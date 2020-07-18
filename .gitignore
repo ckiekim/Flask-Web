@@ -25,5 +25,6 @@ htmlcov/
 *,cover
 
 # Added by CKKim
+.ipynb_checkpoints/
 model/
 uploads/
