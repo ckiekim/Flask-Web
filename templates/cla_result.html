@@ -10,9 +10,10 @@
                     <td><img src="{{url_for('static', filename='images/uploads/'+filename)}}" 
                              width="440" alt="uploaded image"></td>
                 </tr>
-                <tr style="background:yellow;">
-                    <td>분류 결과</td>
-                    <td>{{label}} ({{pct}}%)</td>
+                <!-- <tr style="background:yellow;"> -->
+                <tr class="alert alert-warning">
+                    <td><strong>분류 결과</strong></td>
+                    <td><strong>{{label}} ({{pct}}%)</strong></td>
                 </tr>
                 <tr>
                     <td colspan="2" style="text-align: center;">
