@@ -1,11 +1,12 @@
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelEncoder
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 
-def clustering_iris(ncls, filename='data/iris.csv'):
-    iris_df = pd.read_csv(filename)
+def clustering_iris(app, ncls, filename='data/iris.csv'):
+    iris_df = pd.read_csv(os.path.join(app.root_path, filename))
     del iris_df['Id']
     target = LabelEncoder().fit_transform(iris_df['Species'])
     del iris_df['Species']
@@ -35,7 +36,7 @@ def clustering_iris(ncls, filename='data/iris.csv'):
     ax.legend()
     ax.set_xlabel('PCA 1')
     ax.set_ylabel('PCA 2')
-    fig.savefig('static/images/pca.png')
+    fig.savefig(os.path.join(app.root_path, 'static/images/pca.png'))
 
     # K-Means Clustering 산점도
     fig, ax = plt.subplots(figsize=(6,4))
@@ -45,4 +46,4 @@ def clustering_iris(ncls, filename='data/iris.csv'):
         ax.scatter(x_axis_data, y_axis_data, marker=markers[i])
     ax.set_xlabel('PCA 1')
     ax.set_ylabel('PCA 2')
-    fig.savefig('static/images/kmc.png')
+    fig.savefig(os.path.join(app.root_path, 'static/images/kmc.png'))

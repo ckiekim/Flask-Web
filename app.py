@@ -12,6 +12,7 @@ from PIL import Image
 from clu_util import clustering_iris
 
 app = Flask(__name__)
+app.debug=True
 
 dow = ['월', '화', '수', '목', '금', '토', '일']
 stopwords=['의','가','이','은','들','는','좀','잘','걍','과','도','를','으로','자','에','와','한','하다']
@@ -29,8 +30,8 @@ def get_today():
 
 def load_lr():
     global tfidf_vector, model_lr
-    tfidf_vector = joblib.load('model/movie_lr_dtm.pkl')
-    model_lr = joblib.load('model/movie_lr.pkl')
+    tfidf_vector = joblib.load(os.path.join(app.root_path, 'model/movie_lr_dtm.pkl'))
+    model_lr = joblib.load(os.path.join(app.root_path, 'model/movie_lr.pkl'))
 
 def tw_tokenizer(text):
     # 입력 인자로 들어온 text 를 형태소 단어로 토큰화 하여 list 객체 반환
@@ -44,8 +45,8 @@ def lr_transform(review):
 
 def load_nb():
     global dtmvector, model_nb
-    dtmvector = joblib.load('model/movie_nb_dtm.pkl')
-    model_nb = joblib.load('model/movie_nb.pkl')
+    dtmvector = joblib.load(os.path.join(app.root_path, 'model/movie_nb_dtm.pkl'))
+    model_nb = joblib.load(os.path.join(app.root_path, 'model/movie_nb.pkl'))
 
 def nb_transform(review):
     review = review.replace("[^ㄱ-ㅎㅏ-ㅣ가-힣 ]","")
@@ -121,10 +122,11 @@ def clustering():
         return render_template('clustering.html', menu=menu, today=get_today())
     else:
         f = request.files['csv']
-        filename = os.path.join(app.root_path, 'static/images/uploads/') + secure_filename(f.filename)
-        f.save(filename)
+        filename = 'static/images/uploads/' + secure_filename(f.filename)
+        f.save(os.path.join(app.root_path, filename))
         ncls = int(request.form['K'])
-        clustering_iris(ncls, filename=filename)
+        clustering_iris(app, ncls, filename=filename)
+
         file_path = os.path.join(app.root_path, 'static/images/kmc.png')
         mtime = int(os.stat(file_path).st_mtime)
         return render_template('clu_result.html', menu=menu, today=get_today(), 
@@ -138,4 +140,4 @@ if __name__ == '__main__':
     load_lr()
     load_nb()
     load_vgg()
-    app.run(debug=True)
+    app.run()
