@@ -28,7 +28,7 @@
                     <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true"></a>
                 </li>
             </ul>
-            <div class="navbar-text">
+            <div class="navbar-text" id="clock">
                 {{today}}
             </div>
         </nav>
@@ -74,5 +74,6 @@
     </div>
     {% block addition %}
     {% endblock %}
+    {# include 'inc/clock.html' #}
 </body>
 </html>
