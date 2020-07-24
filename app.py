@@ -6,6 +6,7 @@ from konlpy.tag import Okt
 import re
 import os
 from tensorflow import keras
+from keras.models import load_model
 from keras.applications.vgg16 import VGG16, decode_predictions
 import numpy as np
 from PIL import Image
@@ -22,6 +23,7 @@ model_lr = None
 dtmvector = None
 model_nb = None
 vgg = None
+model_iris = None
 
 def get_today():
     now = datetime.datetime.now()
@@ -58,6 +60,10 @@ def nb_transform(review):
 def load_vgg():
     global vgg
     vgg = VGG16()
+
+def load_iris():
+    global model_iris
+    model_iris = load_model(os.path.join(app.root_path, 'model/iris.hdf5'))
 
 @app.route('/')
 def index():
@@ -96,6 +102,23 @@ def senti():
         nb = '긍정' if nb_result else '부정'
         movie = {'review':review, 'lr':lr, 'nb':nb}
         return render_template('senti_result.html', menu=menu, today=get_today(), movie=movie)
+
+@app.route('/iris_classification', methods=['GET', 'POST'])
+def iris_classification():
+    menu = {'home':False, 'regression':False, 'senti':False, 'classification':True, 'clustering':False}
+    if request.method == 'GET':
+        return render_template('iris_classification.html', menu=menu, today=get_today())
+    else:
+        sp_names = ['Setosa', 'Versicolor', 'Virginica']
+        slen = float(request.form['slen'])      # Sepal Length
+        swid = float(request.form['swid'])      # Sepal Width
+        plen = float(request.form['plen'])      # Petal Length
+        pwid = float(request.form['pwid'])      # Petal Width
+        iris_test = np.array([slen, swid, plen, pwid]).reshape(1, 4)
+        sp = np.argmax(model_iris.predict(iris_test))
+        species = sp_names[sp]
+        iris = {'slen':slen, 'swid':swid, 'plen':plen, 'pwid':pwid, 'species':species}
+        return render_template('iris_cla_result.html', menu=menu, today=get_today(), iris=iris)
 
 @app.route('/classification', methods=['GET', 'POST'])
 def classification():
@@ -140,4 +163,5 @@ if __name__ == '__main__':
     load_lr()
     load_nb()
     load_vgg()
+    load_iris()
     app.run()

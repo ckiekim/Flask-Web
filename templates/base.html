@@ -41,12 +41,23 @@
                         href="{% if menu.regression %}#{% else %}/regression{% endif %}">회귀</a></li>
                     <li class="nav-item"><a class="nav-link {% if menu.senti %}active{% endif %}" 
                         href="{% if menu.senti %}#{% else %}/senti{% endif %}">감성분석</a></li>
-                    <li class="nav-item"><a class="nav-link {% if menu.classification %}active{% endif %}" 
-                        href="{% if menu.classification %}#{% else %}/classification{% endif %}">분류</a></li>
+                    <!-- <li class="nav-item"><a class="nav-link {% if menu.classification %}active{% endif %}" 
+                        href="{% if menu.classification %}#{% else %}/classification{% endif %}">분류</a></li> -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if menu.classification %}active{% endif %}" href="#" 
+                           id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            분류
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="/iris_classification">아이리스 분류</a>
+                            <a class="dropdown-item" href="/classification">이미지 분류</a>
+                        </div>
+                    </li>
                     <li class="nav-item"><a class="nav-link {% if menu.clustering %}active{% endif %}" 
                         href="{% if menu.clustering %}#{% else %}/clustering{% endif %}">군집화</a></li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" 
+                           id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             팀 멤버
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -74,6 +85,6 @@
     </div>
     {% block addition %}
     {% endblock %}
-    {# include 'inc/clock.html' #}
+    {% include 'inc/clock.html' %}
 </body>
 </html>
