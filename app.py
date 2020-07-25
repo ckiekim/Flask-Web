@@ -1,6 +1,5 @@
 from flask import Flask, request, render_template
 from werkzeug.utils import secure_filename
-import datetime
 import joblib
 from konlpy.tag import Okt
 import re
@@ -15,7 +14,6 @@ from clu_util import clustering_iris
 app = Flask(__name__)
 app.debug=True
 
-dow = ['월', '화', '수', '목', '금', '토', '일']
 stopwords=['의','가','이','은','들','는','좀','잘','걍','과','도','를','으로','자','에','와','한','하다']
 okt = Okt()
 tfidf_vector = None
@@ -23,12 +21,10 @@ model_lr = None
 dtmvector = None
 model_nb = None
 vgg = None
-model_iris = None
-
-def get_today():
-    now = datetime.datetime.now()
-    today = now.strftime('%Y-%m-%d') + ' (' + dow[now.weekday()] + ')'
-    return today
+model_iris_deep = None
+model_iris_lr = None
+model_iris_svm = None
+model_iris_dt = None
 
 def load_lr():
     global tfidf_vector, model_lr
@@ -62,19 +58,22 @@ def load_vgg():
     vgg = VGG16()
 
 def load_iris():
-    global model_iris
-    model_iris = load_model(os.path.join(app.root_path, 'model/iris.hdf5'))
+    global model_iris_deep, model_iris_lr, model_iris_svm, model_iris_dt
+    model_iris_deep = load_model(os.path.join(app.root_path, 'model/iris.hdf5'))
+    model_iris_lr = joblib.load(os.path.join(app.root_path, 'model/iris_lr.pkl'))
+    model_iris_svm = joblib.load(os.path.join(app.root_path, 'model/iris_svm.pkl'))
+    model_iris_dt = joblib.load(os.path.join(app.root_path, 'model/iris_dt.pkl'))
 
 @app.route('/')
 def index():
     menu = {'home':True, 'regression':False, 'senti':False, 'classification':False, 'clustering':False}
-    return render_template('home.html', menu=menu, today=get_today())
+    return render_template('home.html', menu=menu)
 
 @app.route('/regression', methods=['GET', 'POST'])
 def regression():
     menu = {'home':False, 'regression':True, 'senti':False, 'classification':False, 'clustering':False}
     if request.method == 'GET':
-        return render_template('regression.html', menu=menu, today=get_today())
+        return render_template('regression.html', menu=menu)
     else:
         sp_names = ['Setosa', 'Versicolor', 'Virginica']
         slen = float(request.form['slen'])      # Sepal Length
@@ -85,13 +84,13 @@ def regression():
         swid = 0.63711424 * slen - 0.53485016 * plen + 0.55807355 * pwid - 0.12647156 * sp + 0.78264901
         swid = round(swid, 4)
         iris = {'slen':slen, 'swid':swid, 'plen':plen, 'pwid':pwid, 'species':species}
-        return render_template('reg_result.html', menu=menu, today=get_today(), iris=iris)
+        return render_template('reg_result.html', menu=menu, iris=iris)
 
 @app.route('/senti', methods=['GET', 'POST'])
 def senti():
     menu = {'home':False, 'regression':False, 'senti':True, 'classification':False, 'clustering':False}
     if request.method == 'GET':
-        return render_template('senti.html', menu=menu, today=get_today())
+        return render_template('senti.html', menu=menu)
     else:
         review = request.form['review']
         review_dtm_lr = lr_transform(review)
@@ -101,13 +100,13 @@ def senti():
         lr = '긍정' if lr_result else '부정'
         nb = '긍정' if nb_result else '부정'
         movie = {'review':review, 'lr':lr, 'nb':nb}
-        return render_template('senti_result.html', menu=menu, today=get_today(), movie=movie)
+        return render_template('senti_result.html', menu=menu, movie=movie)
 
 @app.route('/iris_classification', methods=['GET', 'POST'])
 def iris_classification():
     menu = {'home':False, 'regression':False, 'senti':False, 'classification':True, 'clustering':False}
     if request.method == 'GET':
-        return render_template('iris_classification.html', menu=menu, today=get_today())
+        return render_template('iris_classification.html', menu=menu)
     else:
         sp_names = ['Setosa', 'Versicolor', 'Virginica']
         slen = float(request.form['slen'])      # Sepal Length
@@ -115,16 +114,21 @@ def iris_classification():
         plen = float(request.form['plen'])      # Petal Length
         pwid = float(request.form['pwid'])      # Petal Width
         iris_test = np.array([slen, swid, plen, pwid]).reshape(1, 4)
-        sp = np.argmax(model_iris.predict(iris_test))
-        species = sp_names[sp]
-        iris = {'slen':slen, 'swid':swid, 'plen':plen, 'pwid':pwid, 'species':species}
-        return render_template('iris_cla_result.html', menu=menu, today=get_today(), iris=iris)
+        sp = np.argmax(model_iris_deep.predict(iris_test))
+        species_deep = sp_names[sp]
+        species_lr = sp_names[model_iris_lr.predict(iris_test)[0]]
+        species_svm = sp_names[model_iris_svm.predict(iris_test)[0]]
+        species_dt = sp_names[model_iris_dt.predict(iris_test)[0]]
+        iris = {'slen':slen, 'swid':swid, 'plen':plen, 'pwid':pwid, 
+                'species_deep':species_deep, 'species_lr':species_lr,
+                'species_svm':species_svm, 'species_dt':species_dt}
+        return render_template('iris_cla_result.html', menu=menu, iris=iris)
 
 @app.route('/classification', methods=['GET', 'POST'])
 def classification():
     menu = {'home':False, 'regression':False, 'senti':False, 'classification':True, 'clustering':False}
     if request.method == 'GET':
-        return render_template('classification.html', menu=menu, today=get_today())
+        return render_template('classification.html', menu=menu)
     else:
         f = request.files['image']
         filename = os.path.join(app.root_path, 'static/images/uploads/') + secure_filename(f.filename)
@@ -134,7 +138,7 @@ def classification():
         label_key = np.argmax(yhat)
         label = decode_predictions(yhat)
         label = label[0][0]
-        return render_template('cla_result.html', menu=menu, today=get_today(),
+        return render_template('cla_result.html', menu=menu, 
                                 filename=secure_filename(f.filename), 
                                 label=label[1], pct='%.2f' % (label[2]*100))
 
@@ -142,7 +146,7 @@ def classification():
 def clustering():
     menu = {'home':False, 'regression':False, 'senti':False, 'classification':False, 'clustering':True}
     if request.method == 'GET':
-        return render_template('clustering.html', menu=menu, today=get_today())
+        return render_template('clustering.html', menu=menu)
     else:
         f = request.files['csv']
         filename = 'static/images/uploads/' + secure_filename(f.filename)
@@ -152,7 +156,7 @@ def clustering():
 
         file_path = os.path.join(app.root_path, 'static/images/kmc.png')
         mtime = int(os.stat(file_path).st_mtime)
-        return render_template('clu_result.html', menu=menu, today=get_today(), 
+        return render_template('clu_result.html', menu=menu,  
                                 K=ncls, mtime=mtime)
 
 @app.errorhandler(404)
